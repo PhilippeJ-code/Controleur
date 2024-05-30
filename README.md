@@ -2,7 +2,7 @@
 
     Controleur GRBL. L'application tourne sur une Waveshare ESP32-S3-Touch-LCD-4.3.
 
-        L'ESP32-S3 dispose d'un port USB OTG configuré en Host. Ce qui permet de
+        L'ESP32-S3 dispose d'un port USB OTG configurable en Host. Ce qui permet de
         connecter une imprimante laser et de la commander comme on le ferait à partir
         d'un PC à l'aide de Laser GRBL par exemple.
 
