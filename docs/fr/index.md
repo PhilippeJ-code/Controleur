@@ -9,7 +9,7 @@
 
     Panneau de contrôle manuel
 
-        La vitesse de déplacement peut-être réglée grâce au slider vitesse.
+        La vitesse de déplacement peut-être réglée grâce au slider vitesse
         La distance de déplacement peut-être choisie grâce aux boutons radio de distance
 
 ![ArrowUp](../img/arrow_up.png "ArrowUp")
@@ -30,16 +30,17 @@
 ![Unlock](../img/unlock.png "Unlock")
         Permet d'annuler l'alarme émise par Grbl
 
-![Marker](../img/home.png "Marker")
+![Marker](../img/marker.png "Marker")
         Définit la position actuelle comme la position zéro
 
 ## 2. Panneau Fichiers
 
     Panneau de lecture de la carte SD et du choix d'un fichier.Un clic sur un fichier
-    fera apparaitre une boite de dialogue rappelant le nom du fichier ainsi que trois choix.
+    fera apparaitre une boite de dialogue rappelant le nom du fichier ainsi que trois choix
 
         Graver.     Pour graver le fichier
         Mesurer.    Pour mesurer les valeurs X et Y max. Ces valeurs seront utilisées
+        Annuler.    Pour annuler
                     au niveau du panneau Outils.
         
 ![Marker](../img/folder.png "Marker")
@@ -50,6 +51,23 @@
 
     Permet de lire les paramètres de configuration de Grbl
 
+## 4. Panneau Outils
 
+    On peut effectuer ici le choix de la langue qui sera effectif au redémmarage du controleur.
+
+    Quelques outils permettant de préparer la gravure.
+
+![Spot](../img/spot.png "Spot")
+        Allume ou éteint le spot laser
+
+![Square](../img/square.png "Square")
+        Délimite la surface d'impression avec un spot laser
+
+![Center](../img/center.png "Center")
+        Positionne le laser au milieu de la surface d'impression
+
+![Engraving](../img/engraving.png "Engraving")
+        Démarre la gravure du fichier précédemment mesuré
+        
 
 
