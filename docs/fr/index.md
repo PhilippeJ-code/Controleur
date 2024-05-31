@@ -13,10 +13,10 @@
         La distance de déplacement peut-être choisie grâce aux boutons radio de distance
 
 ![ArrowUp](../img/arrow_up.png "ArrowUp")
-        Déplacement Y négatif
+        Déplacement Y positif
 
 ![ArrowDown](../img/arrow_down.png "ArrowDown")
-        Déplacement Y positif
+        Déplacement Y négatif
 
 ![ArrowLeft](../img/arrow_left.png "ArrowLeft")
         Déplacement X négatif
@@ -32,6 +32,20 @@
 
 ![Marker](../img/marker.png "Marker")
         Définit la position actuelle comme la position zéro
+
+![ArrowTopLeft](../img/arrow_top_left.png "ArrowTopLeft")
+        Déplacement X négatif et Y positif
+
+![ArrowTopRight](../img/arrow_top_right.png "ArrowTopRight")
+        Déplacement X positif et Y positif
+
+![ArrowBottomLeft](../img/arrow_bottom_left.png "ArrowBottomLeft")
+        Déplacement X négatif et Y négatif
+
+![ArrowBottomRight](../img/arrow_bottom_right.png "ArrowBottomRight")
+        Déplacement X positif et Y négatif
+
+
 
 ## 2. Panneau Fichiers
 
@@ -63,10 +77,13 @@
 ![Square](../img/square.png "Square")
         Délimite la surface d'impression avec un spot laser
 
-![Center](../img/center.png "Center")
-        Positionne le laser au milieu de la surface d'impression
+![Center](../img/center.png "Center") 
+Positionne le laser au milieu de la surface d'impression
 
-![Engraving](../img/engraving.png "Engraving")
+![Corner](../img/corner.png "Corner") 
+Positionne le laser au départ de la surface d'impression
+
+![Execute](../img/execute.png "Execute")
         Démarre la gravure du fichier précédemment mesuré
         
 

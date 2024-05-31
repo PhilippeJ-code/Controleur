@@ -5,12 +5,6 @@ dependencies:
       service_url: https://api.components.espressif.com/
       type: service
     version: 1.1.1
-  espressif/esp_lcd_touch_gt911:
-    component_hash: 20ac25d1439dbe177764dbed9cd868388fecb052380b5349f2e9e370013ca76a
-    source:
-      service_url: https://api.components.espressif.com/
-      type: service
-    version: 1.1.0
   espressif/usb_host_cdc_acm:
     component_hash: b08bc47056e1d4f8b30fbaec77636cedad0435446f256fa0a75650752d1deca6
     source:
@@ -52,6 +46,6 @@ dependencies:
       service_url: https://api.components.espressif.com/
       type: service
     version: 8.4.0
-manifest_hash: 7669435f3e51ae6e01b58dd408be5fda4345aadd9ed1a144dd6b50e84020d9c5
+manifest_hash: db30d1e6095cb96651a1854a55f9a4a4b21e263341583e579ee7bf13c9e5e716
 target: esp32s3
 version: 1.0.0

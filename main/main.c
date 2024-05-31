@@ -26,8 +26,13 @@ LV_IMG_DECLARE(img_marker);
 LV_IMG_DECLARE(img_focus);
 LV_IMG_DECLARE(img_square);
 LV_IMG_DECLARE(img_center);
+LV_IMG_DECLARE(img_corner);
 LV_IMG_DECLARE(img_execute);
 LV_IMG_DECLARE(img_caret_down);
+LV_IMG_DECLARE(img_arrow_bottom_left);
+LV_IMG_DECLARE(img_arrow_bottom_right);
+LV_IMG_DECLARE(img_arrow_top_left);
+LV_IMG_DECLARE(img_arrow_top_right);
 
 LV_FONT_DECLARE(my_lv_font_montserrat_18);
 
@@ -97,6 +102,7 @@ static int speed = 1000;
 static lv_style_t style_radio;
 static lv_style_t style_radio_chk;
 static uint32_t active_index = 2;
+static float distance = 10;
 
 static int scnSendFile = 0;
 static FILE *f = NULL;
@@ -702,13 +708,8 @@ static void event_up(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        float f = 0.1;
-        for (int i = 0; i < active_index; i++)
-        {
-            f *= 10;
-        }
         char data[48];
-        sprintf(data, "$J=G91Y-%.2fF%d\n", f, speed);
+        sprintf(data, "$J=G91Y%.2fF%d\n", distance, speed);
         usbSend((uint8_t *)data, strlen(data));
     }
 }
@@ -719,13 +720,8 @@ static void event_down(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        float f = 0.1;
-        for (int i = 0; i < active_index; i++)
-        {
-            f *= 10;
-        }
         char data[48];
-        sprintf(data, "$J=G91Y%.2fF%d\n", f, speed);
+        sprintf(data, "$J=G91Y-%.2fF%d\n", distance, speed);
         usbSend((uint8_t *)data, strlen(data));
     }
 }
@@ -736,13 +732,8 @@ static void event_left(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        float f = 0.1;
-        for (int i = 0; i < active_index; i++)
-        {
-            f *= 10;
-        }
         char data[48];
-        sprintf(data, "$J=G91X-%.2fF%d\n", f, speed);
+        sprintf(data, "$J=G91X-%.2fF%d\n", distance, speed);
         usbSend((uint8_t *)data, strlen(data));
     }
 }
@@ -753,13 +744,56 @@ static void event_right(lv_event_t *e)
 
     if (code == LV_EVENT_CLICKED)
     {
-        float f = 0.1;
-        for (int i = 0; i < active_index; i++)
-        {
-            f *= 10;
-        }
         char data[48];
-        sprintf(data, "$J=G91X%.2fF%d\n", f, speed);
+        sprintf(data, "$J=G91X%.2fF%d\n", distance, speed);
+        usbSend((uint8_t *)data, strlen(data));
+    }
+}
+
+static void event_bottom_left(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        char data[48];
+        sprintf(data, "$J=G91X-%.2fY-%.2fF%d\n", distance, distance, speed);
+        usbSend((uint8_t *)data, strlen(data));
+    }
+}
+
+static void event_bottom_right(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        char data[48];
+        sprintf(data, "$J=G91X%.2fY-%.2fF%d\n", distance, distance, speed);
+        usbSend((uint8_t *)data, strlen(data));
+    }
+}
+
+static void event_top_left(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        char data[48];
+        sprintf(data, "$J=G91X-%.2fY%.2fF%d\n", distance, distance, speed);
+        usbSend((uint8_t *)data, strlen(data));
+    }
+}
+
+static void event_top_right(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        char data[48];
+        sprintf(data, "$J=G91X%.2fY%.2fF%d\n", distance, distance, speed);
         usbSend((uint8_t *)data, strlen(data));
     }
 }
@@ -864,6 +898,12 @@ static void radio_event_handler(lv_event_t *e)
     lv_obj_add_state(act_cb, LV_STATE_CHECKED);   /*Uncheck the current radio button*/
 
     *active_id = lv_obj_get_index(act_cb);
+    distance = 0.1;
+    for (int i = 0; i < *active_id; i++)
+    {
+        distance *= 10;
+    }
+
 }
 
 static void radiobutton_create(lv_obj_t *parent, const char *txt)
@@ -925,6 +965,50 @@ void CreateJoystick(lv_obj_t *parent)
     lv_img_set_src(img_right, &img_arrow_right);
     lv_obj_center(img_right);
     lv_obj_add_style(img_right, &image_style, 0);
+
+    lv_obj_t *btn_bottom_left = lv_btn_create(panelJog);
+    lv_obj_add_event_cb(btn_bottom_left, event_bottom_left, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_bottom_left, 64);
+    lv_obj_set_width(btn_bottom_left, 64);
+    lv_obj_align(btn_bottom_left, LV_ALIGN_TOP_LEFT, 0, 64 + 8 + 64 + 8);
+
+    lv_obj_t *img_bottom_left = lv_img_create(btn_bottom_left);
+    lv_img_set_src(img_bottom_left, &img_arrow_bottom_left);
+    lv_obj_center(img_bottom_left);
+    lv_obj_add_style(img_bottom_left, &image_style, 0);
+
+    lv_obj_t *btn_bottom_right = lv_btn_create(panelJog);
+    lv_obj_add_event_cb(btn_bottom_right, event_bottom_right, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_bottom_right, 64);
+    lv_obj_set_width(btn_bottom_right, 64);
+    lv_obj_align(btn_bottom_right, LV_ALIGN_TOP_LEFT, 64 + 8 + 64 + 8, 64 + 8 + 64 + 8);
+
+    lv_obj_t *img_bottom_right = lv_img_create(btn_bottom_right);
+    lv_img_set_src(img_bottom_right, &img_arrow_bottom_right);
+    lv_obj_center(img_bottom_right);
+    lv_obj_add_style(img_bottom_right, &image_style, 0);
+
+    lv_obj_t *btn_top_left = lv_btn_create(panelJog);
+    lv_obj_add_event_cb(btn_top_left, event_top_left, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_top_left, 64);
+    lv_obj_set_width(btn_top_left, 64);
+    lv_obj_align(btn_top_left, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    lv_obj_t *img_top_left = lv_img_create(btn_top_left);
+    lv_img_set_src(img_top_left, &img_arrow_top_left);
+    lv_obj_center(img_top_left);
+    lv_obj_add_style(img_top_left, &image_style, 0);
+
+    lv_obj_t *btn_top_right = lv_btn_create(panelJog);
+    lv_obj_add_event_cb(btn_top_right, event_top_right, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_top_right, 64);
+    lv_obj_set_width(btn_top_right, 64);
+    lv_obj_align(btn_top_right, LV_ALIGN_TOP_LEFT, 64 + 8 + 64 + 8, 0);
+
+    lv_obj_t *img_top_right = lv_img_create(btn_top_right);
+    lv_img_set_src(img_top_right, &img_arrow_top_right);
+    lv_obj_center(img_top_right);
+    lv_obj_add_style(img_top_right, &image_style, 0);
 
     lv_obj_t *btn_home = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_home, event_home, LV_EVENT_ALL, NULL);
@@ -1315,6 +1399,18 @@ static void event_center(lv_event_t *e)
     }
 }
 
+static void event_corner(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if (code == LV_EVENT_CLICKED)
+    {
+        char str[128];
+        sprintf(str, "M3S30.000\nG1F1000\nX0Y0\nM5S0\nG0\n");
+        usbSend((uint8_t *)str, strlen(str));
+    }
+}
+
 static void event_execute(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
@@ -1368,10 +1464,32 @@ void CreateTools(lv_obj_t *parent)
     lv_obj_set_width(btn_center, 64);
     lv_obj_align(btn_center, LV_ALIGN_TOP_LEFT, 64 + 8 - 5, 0 - 5);
 
+    lv_obj_t *btn_corner = lv_btn_create(parent);
+    lv_obj_add_event_cb(btn_corner, event_corner, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_corner, 64);
+    lv_obj_set_width(btn_corner, 64);
+    lv_obj_align(btn_corner, LV_ALIGN_TOP_LEFT, 64 + 8 - 5, 64 + 8 - 5);
+
+    lv_obj_t *image_corner = lv_img_create(btn_corner);
+    lv_img_set_src(image_corner, &img_corner);
+    lv_obj_center(image_corner);
+    lv_obj_add_style(image_corner, &image_style, 0);
+
     lv_obj_t *image_center = lv_img_create(btn_center);
     lv_img_set_src(image_center, &img_center);
     lv_obj_center(image_center);
     lv_obj_add_style(image_center, &image_style, 0);
+
+    lv_obj_t *btn_execute = lv_btn_create(parent);
+    lv_obj_add_event_cb(btn_execute, event_execute, LV_EVENT_ALL, NULL);
+    lv_obj_set_height(btn_execute, 64);
+    lv_obj_set_width(btn_execute, 64);
+    lv_obj_align(btn_execute, LV_ALIGN_TOP_LEFT, 0 - 5, 64 + 8 + 64 + 8- 5);
+
+    lv_obj_t *image_execute = lv_img_create(btn_execute);
+    lv_img_set_src(image_execute, &img_execute);
+    lv_obj_center(image_execute);
+    lv_obj_add_style(image_execute, &image_style, 0);
 
     labelFileTools = lv_label_create(parent);
     lv_obj_align(labelFileTools, LV_ALIGN_TOP_LEFT, 170 - 5, 0 - 5);
@@ -1394,17 +1512,6 @@ void CreateTools(lv_obj_t *parent)
     sprintf(str, "Y : %.1f", surfaceY);
     lv_label_set_text(labelSurfaceY, str);
     lv_obj_align(labelSurfaceY, LV_ALIGN_TOP_LEFT, 0, 75);
-
-    lv_obj_t *btn_execute = lv_btn_create(parent);
-    lv_obj_add_event_cb(btn_execute, event_execute, LV_EVENT_ALL, NULL);
-    lv_obj_set_height(btn_execute, 64);
-    lv_obj_set_width(btn_execute, 64);
-    lv_obj_align(btn_execute, LV_ALIGN_TOP_LEFT, 64 + 8 - 5, 64 + 8 - 5);
-
-    lv_obj_t *image_execute = lv_img_create(btn_execute);
-    lv_img_set_src(image_execute, &img_execute);
-    lv_obj_center(image_execute);
-    lv_obj_add_style(image_execute, &image_style, 0);
 
     lv_obj_set_height(panelMax, LV_SIZE_CONTENT);
     lv_obj_set_width(panelMax, LV_SIZE_CONTENT);
