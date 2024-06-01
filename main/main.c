@@ -286,7 +286,6 @@ static void updateVals(lv_timer_t *timer)
         {
             while (memoIdxPar < idxPar)
             {
-                ESP_LOGI(TAG, "memoIdxPar: %d", memoIdxPar);
                 lv_obj_t *list_txt = lv_list_add_text(list_params, params[memoIdxPar]);
                 lv_obj_set_style_text_font(list_txt, &my_lv_font_montserrat_18, 0);
                 memoIdxPar++;
