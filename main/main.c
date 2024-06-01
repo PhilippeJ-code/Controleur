@@ -385,6 +385,7 @@ static void send_file(void *arg)
     {
         if (scnSendFile == 1)
         {
+            bEnd = true;
 
             if ((strlen(folderName) + strlen(fileName)) >= MAX_FILE_SIZE)
             {

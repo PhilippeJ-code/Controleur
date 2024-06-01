@@ -24,15 +24,6 @@
 ![ArrowRight](../img/arrow_right.png "ArrowRight")
         Déplacement X positif
 
-![Home](../img/home.png "Home")
-        Retour à la position de Homing
-
-![Unlock](../img/unlock.png "Unlock")
-        Permet d'annuler l'alarme émise par Grbl
-
-![Marker](../img/marker.png "Marker")
-        Définit la position actuelle comme la position zéro
-
 ![ArrowTopLeft](../img/arrow_top_left.png "ArrowTopLeft")
         Déplacement X négatif et Y positif
 
@@ -45,7 +36,14 @@
 ![ArrowBottomRight](../img/arrow_bottom_right.png "ArrowBottomRight")
         Déplacement X positif et Y négatif
 
+![Home](../img/home.png "Home")
+        Retour à la position de Homing
 
+![Unlock](../img/unlock.png "Unlock")
+        Permet d'annuler l'alarme émise par Grbl
+
+![Marker](../img/marker.png "Marker")
+        Définit la position actuelle comme la position zéro
 
 ## 2. Panneau Fichiers
 
