@@ -79,9 +79,11 @@ static lv_obj_t *list_params;
 
 lv_obj_t *labelSurfaceX = NULL;
 lv_obj_t *labelSurfaceY = NULL;
+lv_obj_t *labelSurfaceZ = NULL;
 
 static float surfaceX = 10.0;
 static float surfaceY = 10.0;
+static float surfaceZ = 10.0;
 
 #define MAX_PARAMS 50
 #define PARAM_SIZE 20
@@ -127,26 +129,26 @@ void errorMessage(char *msg)
 }
 
 void decodeFloat(char *pSection)
-{ // decode up to 4 float numbers comma delimited in a section
+{ 
     decodedFloat[0] = 0;
     decodedFloat[1] = 0;
     decodedFloat[2] = 0;
     decodedFloat[3] = 0;
     char *pEndNum;
     int i = 0;
-    pEndNum = strpbrk(pSection, ",|>"); // cherche un dernier caractère valide après le nombre
+    pEndNum = strpbrk(pSection, ",|>");
     while ((i < 4) && pEndNum)
-    { // decode max 4 floats
+    {
         decodedFloat[i] = atof(pSection);
         if (*pEndNum == ',')
-        { // if last char is ',', then we loop
+        {
             pSection = pEndNum + 1;
             i++;
-            pEndNum = strpbrk(pSection, ",|>"); // search first char that end the section and return the position of this end
+            pEndNum = strpbrk(pSection, ",|>");
         }
         else
         {
-            i = 4; // force to exit while when the last char was not a comma
+            i = 4;
         }
     }
 }
@@ -196,11 +198,11 @@ void parseStatusLine(char *line)
                 {
                     wcoXYZA[i] = decodedFloat[i];
                     if (MPosOrWPos == 'W')
-                    { // we previously had a WPos so we update MPos
+                    {
                         mposXYZA[i] = wposXYZA[i] + wcoXYZA[i];
                     }
                     else
-                    { // we previously had a MPos so we update WPos
+                    {
                         wposXYZA[i] = mposXYZA[i] - wcoXYZA[i];
                     }
                 }
@@ -381,6 +383,7 @@ static void send_file(void *arg)
     static uint16_t idxusb = 0;
 
     static bool bEnd = true;
+    static bool bComment = false;
 
     while (1)
     {
@@ -500,21 +503,27 @@ static void send_file(void *arg)
                     idxEcr = 0;
                 bufferSize += idxusb;
                 usbSend(carusb, idxusb);
+                
                 idxusb = 0;
             }
 
             if (idxusb == 0)
             {
+                bComment = false;
                 while (true)
                 {
                     if (readSize < size)
                     {
                         uint8_t car = fgetc(f);
                         readSize++;
-                        if (car != '\r' && car != ' ')
+                        if ( car == '(' ) 
+                            bComment = true;
+                        if (car != '\r' && car != ' ' && bComment == false)
                         {
                             carusb[idxusb++] = car;
                         }
+                        if ( car == ')' )
+                            bComment = false;
 
                         if (car == '\n')
                             break;
@@ -1221,6 +1230,7 @@ static void event_file_msgbox(lv_event_t *e)
 
         surfaceX = 0;
         surfaceY = 0;
+        surfaceZ = 0;
         char line[128];
         while (fgets(line, sizeof(line), f) != NULL)
         {
@@ -1241,6 +1251,13 @@ static void event_file_msgbox(lv_event_t *e)
                     if (y > surfaceY)
                         surfaceY = y;
                 }
+                else if (*car == 'Z')
+                {
+                    car++;
+                    float z = atof(car);
+                    if (z > surfaceZ)
+                        surfaceZ = z;
+                }
                 car++;
             }
         }
@@ -1253,6 +1270,8 @@ static void event_file_msgbox(lv_event_t *e)
         lv_label_set_text(labelSurfaceX, str);
         sprintf(str, "Y : %.1f", surfaceY);
         lv_label_set_text(labelSurfaceY, str);
+        sprintf(str, "Z : %.1f", surfaceZ);
+        lv_label_set_text(labelSurfaceZ, str);
     }
     lv_msgbox_close(msg_box);
 }
@@ -1514,6 +1533,11 @@ void CreateTools(lv_obj_t *parent)
     sprintf(str, "Y : %.1f", surfaceY);
     lv_label_set_text(labelSurfaceY, str);
     lv_obj_align(labelSurfaceY, LV_ALIGN_TOP_LEFT, 0, 75);
+
+    labelSurfaceZ = lv_label_create(panelMax);
+    sprintf(str, "Z : %.1f", surfaceZ);
+    lv_label_set_text(labelSurfaceZ, str);
+    lv_obj_align(labelSurfaceZ, LV_ALIGN_TOP_LEFT, 0, 115);
 
     lv_obj_set_height(panelMax, LV_SIZE_CONTENT);
     lv_obj_set_width(panelMax, LV_SIZE_CONTENT);
