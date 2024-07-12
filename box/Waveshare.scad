@@ -10,9 +10,9 @@ largeurCircuit = 69;
 rayonCoin = 2;
 
 hauteurBoite = 13;
-hauteurCouvercle = 14;
+hauteurCouvercle = 13;
 epaisseurParoi = 4;
-epaisseurFond = 2;
+epaisseurFond = 1;
 
 hauteurConnexion = 4;
 
@@ -38,14 +38,21 @@ module bottomWaveshare()
             //
 			translate([ -0.1, 18, 8 ])
 			{
-				cube([ epaisseurParoi + 0.2, 18, 6 ]);
+				cube([ epaisseurParoi + 0.2, 18, 6.1 ]);
 			}
 
             // Ports USB
             //
 			translate([ 10, longueurBoite - epaisseurParoi - 0.1, epaisseurFond + 5 ])
 			{
-				cube([ 40, epaisseurParoi + 0.2, 7 ]);
+				cube([ 40, epaisseurParoi + 0.2, 7.1 ]);
+			}
+
+			// I2C
+			//
+			translate([ largeurBoite/2 - 5, - 0.1, epaisseurFond ])
+			{
+				cube([ 10, epaisseurParoi + 0.2, 6 ]);
 			}
 
             // Connexion
@@ -104,22 +111,21 @@ module bottomWaveshare()
         //
 		translate([ epaisseurParoi, epaisseurParoi, epaisseurFond ])
 		{
-			cube([ 7, 7, 6 ]);
+			cube([ 7, 7, 7 ]);
 		}
 		translate([ largeurBoite - epaisseurParoi - 7, epaisseurParoi, epaisseurFond ])
 		{
-			cube([ 7, 7, 6 ]);
+			cube([ 7, 7, 7 ]);
 		}
 		translate([ epaisseurParoi, longueurBoite - epaisseurParoi - 7, epaisseurFond ])
 		{
-			cube([ 7, 7, 6 ]);
+			cube([ 7, 7, 7 ]);
 		}
-        /*
 		translate([ largeurBoite - epaisseurParoi - 7, longueurBoite - epaisseurParoi - 7, epaisseurFond ])
 		{
-			cube([ 7, 7, 6 ]);
+			cube([ 7, 7, 7 ]);
 		}
-        */
+    
 	}
 }
 

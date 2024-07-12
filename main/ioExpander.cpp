@@ -17,8 +17,8 @@ extern "C" void ioExpanderInit()
     expander = new ESP_IOExpander_CH422G((i2c_port_t)I2C_MASTER_NUM, (uint8_t)ESP_IO_EXPANDER_I2C_CH422G_ADDRESS_000);
     expander->init();
     expander->begin();
-    expander->multiPinMode(1<<TP_RST | 1<<LCD_BL | 1<<LCD_RST | 1<<SD_CS | 1<<USB_SEL, OUTPUT);
-    expander->multiDigitalWrite(1<<TP_RST | 1<<LCD_BL | 1<<LCD_RST, HIGH);
+    expander->multiPinMode(63, OUTPUT);
+    expander->multiDigitalWrite(63, HIGH);
 
     // When USB_SEL is HIGH, it enables FSUSB42UMX chip and gpio19,gpio20 wired CAN_TX CAN_RX, and then dont use USB Function
     expander->digitalWrite(USB_SEL, LOW);

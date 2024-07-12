@@ -1,6 +1,5 @@
 // Main.c
 //
-
 #include "stdio.h"
 
 #include "freertos/FreeRTOS.h"
@@ -694,7 +693,7 @@ static void color_changer_create(lv_obj_t *parent)
         lv_obj_set_style_bg_color(c, lv_palette_main(palette[i]), 0);
         lv_obj_set_style_radius(c, LV_RADIUS_CIRCLE, 0);
         lv_obj_set_style_opa(c, LV_OPA_TRANSP, 0);
-        lv_obj_set_size(c, 20, 20);
+        lv_obj_set_size(c, 30, 30);
         lv_obj_add_event_cb(c, color_event_cb, LV_EVENT_ALL, &palette[i]);
         lv_obj_clear_flag(c, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     }
