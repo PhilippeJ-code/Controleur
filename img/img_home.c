@@ -22,6 +22,9 @@
 #endif
 
 const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_IMG_HOME uint8_t img_home_map[] = {
+  0x00, 0x00, 0x00, 0x00,
+  0xff, 0xff, 0xff, 0xff,
+
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -73,11 +76,10 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_IMG_HOME 
 };
 
 const lv_img_dsc_t img_home = {
-  .header.cf = LV_IMG_CF_ALPHA_1BIT,
-  .header.always_zero = 0,
-  .header.reserved = 0,
+  .header.cf = LV_COLOR_FORMAT_I1,
   .header.w = 48,
   .header.h = 48,
-  .data_size = 288,
+  .header.stride = 6,
+  .data_size = sizeof(img_home_map),
   .data = img_home_map,
 };

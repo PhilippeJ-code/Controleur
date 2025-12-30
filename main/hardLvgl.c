@@ -21,29 +21,29 @@
 #define LCD_LVGL_TICK_PERIOD_MS 2
 #define LCD_LVGL_TASK_MAX_DELAY_MS 500
 #define LCD_LVGL_TASK_MIN_DELAY_MS 1
-#define LCD_LVGL_TASK_STACK_SIZE (4 * 1024)
+#define LCD_LVGL_TASK_STACK_SIZE (8 * 1024)
 #define LCD_LVGL_TASK_PRIORITY 2
 
 static SemaphoreHandle_t lvgl_mux = NULL;
-static lv_disp_draw_buf_t       disp_buf;
-static lv_disp_drv_t            disp_drv;
+static lv_display_t *disp;
+static lv_indev_t *indev;
 
-static void hardLvglFlush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
+static void hardLvglFlush(lv_display_t *drv, const lv_area_t *area, uint8_t *color_map)
 {
-    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)drv->user_data;
+    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(drv);
     int offsetx1 = area->x1;
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
 
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, color_map);
-    lv_disp_flush_ready(drv);
+    lv_display_flush_ready(drv);
 }
 
-static void hardLvglTouch(lv_indev_drv_t *indev, lv_indev_data_t *data)
+static void hardLvglTouch(lv_indev_t *indev, lv_indev_data_t *data)
 {
 
-    esp_lcd_touch_handle_t tp = (esp_lcd_touch_handle_t)indev->user_data;
+    esp_lcd_touch_handle_t tp = (esp_lcd_touch_handle_t)lv_indev_get_user_data(indev);
     assert(tp);
 
     uint16_t touchpad_x;
@@ -67,7 +67,11 @@ static void hardLvglTouch(lv_indev_drv_t *indev, lv_indev_data_t *data)
 
 static void hardLvglIncreaseTick(void *arg)
 {
-    lv_tick_inc(LCD_LVGL_TICK_PERIOD_MS);
+    if (hardLvglLock(-1))
+    {
+        lv_tick_inc(LCD_LVGL_TICK_PERIOD_MS);
+        hardLvglUnlock();
+    }
 }
 
 static void hardLvglTask(void *arg)
@@ -100,24 +104,21 @@ void hardLvglInit()
 
     void *buf1 = NULL;
     void *buf2 = NULL;
-    buf1 = heap_caps_malloc(LCD_H_RES * 100 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+
+    disp = lv_display_create(LCD_H_RES, LCD_V_RES);
+
+    uint8_t pixelSize = lv_color_format_get_size(lv_display_get_color_format(disp));
+    buf1 = heap_caps_malloc(LCD_H_RES * 100 * pixelSize, MALLOC_CAP_SPIRAM);
     assert(buf1);
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LCD_H_RES * 100);
 
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = LCD_H_RES;
-    disp_drv.ver_res = LCD_V_RES;
-    disp_drv.flush_cb = hardLvglFlush;
-    disp_drv.draw_buf = &disp_buf;
-    disp_drv.user_data = panel_handle;
-    lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
+    lv_display_set_user_data(disp, panel_handle);
+    lv_display_set_flush_cb(disp, hardLvglFlush);
+    lv_display_set_buffers(disp, buf1, buf2, LCD_H_RES * 100 * pixelSize, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = hardLvglTouch;
-    indev_drv.user_data = gt911GetTp();
-    lv_indev_drv_register(&indev_drv);
+    indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_user_data(indev, gt911GetTp());
+    lv_indev_set_read_cb(indev, hardLvglTouch);
 
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &hardLvglIncreaseTick,

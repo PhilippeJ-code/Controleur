@@ -27,7 +27,6 @@ LV_IMG_DECLARE(img_square);
 LV_IMG_DECLARE(img_center);
 LV_IMG_DECLARE(img_corner);
 LV_IMG_DECLARE(img_execute);
-LV_IMG_DECLARE(img_caret_down);
 LV_IMG_DECLARE(img_arrow_bottom_left);
 LV_IMG_DECLARE(img_arrow_bottom_right);
 LV_IMG_DECLARE(img_arrow_top_left);
@@ -42,13 +41,12 @@ LV_FONT_DECLARE(my_lv_font_montserrat_18);
 #define MAX_FILE_SIZE 256
 
 static uint16_t language = 0;
+static lv_palette_t current_palette = LV_PALETTE_BLUE;
 
 char folderName[MAX_FOLDER_SIZE];
 char fileName[MAX_FILE_SIZE];
 
 static const char *TAG = "Controleur";
-
-static lv_style_t image_style;
 
 static float decodedFloat[4];
 static char machineStatus[9];
@@ -118,17 +116,24 @@ static void eventErrorMessage(lv_event_t *e)
 
 void errorMessage(char *msg)
 {
-    static const char *btns[] = {strOk, ""};
 
-    err_msg_box = lv_msgbox_create(NULL, strError, msg, btns, false);
+    err_msg_box = lv_msgbox_create(NULL);
+
+    lv_msgbox_add_title(err_msg_box, strError);
+    lv_msgbox_add_text(err_msg_box, msg);
+
     lv_obj_set_style_text_font(err_msg_box, &my_lv_font_montserrat_18, 0);
     lv_obj_add_event_cb(err_msg_box, eventErrorMessage, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_center(err_msg_box);
     lv_obj_set_size(err_msg_box, 350, 170);
+
+    lv_obj_t *btn;
+    btn = lv_msgbox_add_footer_button(err_msg_box, strOk);
+    lv_obj_add_event_cb(btn, eventErrorMessage, LV_EVENT_CLICKED, NULL);
 }
 
 void decodeFloat(char *pSection)
-{ 
+{
     decodedFloat[0] = 0;
     decodedFloat[1] = 0;
     decodedFloat[2] = 0;
@@ -328,7 +333,7 @@ static void updateVals(lv_timer_t *timer)
     }
 }
 
-static void read_usb(lv_timer_t *timer)
+static void read_usb(void *arg)
 {
     uint8_t datas[128];
 
@@ -431,7 +436,7 @@ static void send_file(void *arg)
 
             if (hardLvglLock(-1))
             {
-                win = lv_win_create(lv_scr_act(), 40);
+                win = lv_win_create(lv_scr_act());
                 lv_obj_set_height(win, 350);
 
                 lv_win_add_title(win, strEngraving);
@@ -502,7 +507,7 @@ static void send_file(void *arg)
                     idxEcr = 0;
                 bufferSize += idxusb;
                 usbSend(carusb, idxusb);
-                
+
                 idxusb = 0;
             }
 
@@ -515,13 +520,13 @@ static void send_file(void *arg)
                     {
                         uint8_t car = fgetc(f);
                         readSize++;
-                        if ( car == '(' ) 
+                        if (car == '(')
                             bComment = true;
                         if (car != '\r' && car != ' ' && bComment == false)
                         {
                             carusb[idxusb++] = car;
                         }
-                        if ( car == ')' )
+                        if (car == ')')
                             bComment = false;
 
                         if (car == '\n')
@@ -626,12 +631,14 @@ static void color_event_cb(lv_event_t *e)
     {
         lv_palette_t *palette_primary = lv_event_get_user_data(e);
         lv_palette_t palette_secondary = (*palette_primary) + 3; /*Use another palette as secondary*/
-        if (palette_secondary >= _LV_PALETTE_LAST)
+        if (palette_secondary >= LV_PALETTE_LAST)
             palette_secondary = 0;
 #if LV_USE_THEME_DEFAULT
         lv_theme_default_init(NULL, lv_palette_main(*palette_primary), lv_palette_main(palette_secondary),
                               LV_THEME_DEFAULT_DARK, &my_lv_font_montserrat_18);
 #endif
+        current_palette = *palette_primary;
+        nvsWrite("palette", current_palette);
         // lv_color_t color = lv_palette_main(*palette_primary);
         //  lv_style_set_text_color(&style_icon, color);
     }
@@ -669,7 +676,7 @@ static void color_changer_create(lv_obj_t *parent)
 {
     static lv_palette_t palette[] = {
         LV_PALETTE_BLUE, LV_PALETTE_GREEN, LV_PALETTE_BLUE_GREY, LV_PALETTE_ORANGE,
-        LV_PALETTE_RED, LV_PALETTE_PURPLE, LV_PALETTE_TEAL, _LV_PALETTE_LAST};
+        LV_PALETTE_RED, LV_PALETTE_PURPLE, LV_PALETTE_TEAL, LV_PALETTE_LAST};
 
     lv_obj_t *color_cont = lv_obj_create(parent);
     lv_obj_remove_style_all(color_cont);
@@ -687,7 +694,7 @@ static void color_changer_create(lv_obj_t *parent)
     lv_obj_align(color_cont, LV_ALIGN_BOTTOM_RIGHT, -LV_DPX(10), -LV_DPX(10));
 
     uint32_t i;
-    for (i = 0; palette[i] != _LV_PALETTE_LAST; i++)
+    for (i = 0; palette[i] != LV_PALETTE_LAST; i++)
     {
         lv_obj_t *c = lv_btn_create(color_cont);
         lv_obj_set_style_bg_color(c, lv_palette_main(palette[i]), 0);
@@ -705,7 +712,6 @@ static void color_changer_create(lv_obj_t *parent)
     lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
     lv_obj_add_event_cb(btn, color_changer_event_cb, LV_EVENT_ALL, color_cont);
     lv_obj_set_style_shadow_width(btn, 0, 0);
-    lv_obj_set_style_text_font(btn, &lv_font_montserrat_18, 0);
     lv_obj_set_style_bg_img_src(btn, LV_SYMBOL_TINT, 0);
 
     lv_obj_set_size(btn, LV_DPX(50), LV_DPX(50));
@@ -855,22 +861,26 @@ static void speed_event(lv_event_t *e)
     else if (code == LV_EVENT_VALUE_CHANGED)
     {
         speed = (int)lv_slider_get_value(obj);
+        nvsWrite("speed", speed);
     }
-    else if (code == LV_EVENT_DRAW_PART_END)
-    {
-        lv_obj_draw_part_dsc_t *dsc = lv_event_get_param(e);
-        if (dsc->part == LV_PART_KNOB && lv_obj_has_state(obj, LV_STATE_PRESSED))
-        {
+    else if(code == LV_EVENT_DRAW_TASK_ADDED) {
+        lv_draw_task_t * draw_task = lv_event_get_param(e);
+        if(draw_task == NULL || lv_draw_task_get_type(draw_task) != LV_DRAW_TASK_TYPE_FILL) return;
+        lv_draw_rect_dsc_t * draw_rect_dsc = lv_draw_task_get_draw_dsc(draw_task);
+
+        if(draw_rect_dsc->base.part == LV_PART_KNOB && lv_obj_has_state(obj, LV_STATE_PRESSED)) {
             char buf[8];
-            lv_snprintf(buf, sizeof(buf), "%" LV_PRId32, lv_slider_get_value(obj));
+            lv_snprintf(buf, sizeof(buf), "%"LV_PRId32, lv_slider_get_value(obj));
 
             lv_point_t text_size;
-            lv_txt_get_size(&text_size, buf, &my_lv_font_montserrat_18, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+            lv_text_get_size(&text_size, buf, &my_lv_font_montserrat_18, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
 
             lv_area_t txt_area;
-            txt_area.x1 = dsc->draw_area->x1 + lv_area_get_width(dsc->draw_area) / 2 - text_size.x / 2;
+            lv_area_t draw_task_area;
+            lv_draw_task_get_area(draw_task, &draw_task_area);
+            txt_area.x1 = draw_task_area.x1 + lv_area_get_width(&draw_task_area) / 2 - text_size.x / 2;
             txt_area.x2 = txt_area.x1 + text_size.x;
-            txt_area.y2 = dsc->draw_area->y1 - 10;
+            txt_area.y2 = draw_task_area.y1 - 10;
             txt_area.y1 = txt_area.y2 - text_size.y;
 
             lv_area_t bg_area;
@@ -883,17 +893,18 @@ static void speed_event(lv_event_t *e)
             lv_draw_rect_dsc_init(&rect_dsc);
             rect_dsc.bg_color = lv_palette_darken(LV_PALETTE_GREY, 3);
             rect_dsc.radius = LV_DPX(5);
-            lv_draw_rect(dsc->draw_ctx, &rect_dsc, &bg_area);
+            lv_draw_rect(draw_rect_dsc->base.layer, &rect_dsc, &bg_area);
 
             lv_draw_label_dsc_t label_dsc;
             lv_draw_label_dsc_init(&label_dsc);
             label_dsc.color = lv_color_white();
             label_dsc.font = &my_lv_font_montserrat_18;
-            lv_draw_label(dsc->draw_ctx, &label_dsc, &txt_area, buf, NULL);
+            label_dsc.text = buf;
+            label_dsc.text_local = 1;
+            lv_draw_label(draw_rect_dsc->base.layer, &label_dsc, &txt_area);
         }
     }
 }
-
 static void radio_event_handler(lv_event_t *e)
 {
     uint32_t *active_id = lv_event_get_user_data(e);
@@ -913,7 +924,7 @@ static void radio_event_handler(lv_event_t *e)
     {
         distance *= 10;
     }
-
+    nvsWrite("active_index", *active_id);
 }
 
 static void radiobutton_create(lv_obj_t *parent, const char *txt)
@@ -941,7 +952,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_up = lv_img_create(btn_up);
     lv_img_set_src(img_up, &img_arrow_up);
     lv_obj_center(img_up);
-    lv_obj_add_style(img_up, &image_style, 0);
 
     lv_obj_t *btn_down = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_down, event_down, LV_EVENT_ALL, NULL);
@@ -952,7 +962,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_down = lv_img_create(btn_down);
     lv_img_set_src(img_down, &img_arrow_down);
     lv_obj_center(img_down);
-    lv_obj_add_style(img_down, &image_style, 0);
 
     lv_obj_t *btn_left = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_left, event_left, LV_EVENT_ALL, NULL);
@@ -963,7 +972,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_left = lv_img_create(btn_left);
     lv_img_set_src(img_left, &img_arrow_left);
     lv_obj_center(img_left);
-    lv_obj_add_style(img_left, &image_style, 0);
 
     lv_obj_t *btn_right = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_right, event_right, LV_EVENT_ALL, NULL);
@@ -974,7 +982,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_right = lv_img_create(btn_right);
     lv_img_set_src(img_right, &img_arrow_right);
     lv_obj_center(img_right);
-    lv_obj_add_style(img_right, &image_style, 0);
 
     lv_obj_t *btn_bottom_left = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_bottom_left, event_bottom_left, LV_EVENT_ALL, NULL);
@@ -985,7 +992,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_bottom_left = lv_img_create(btn_bottom_left);
     lv_img_set_src(img_bottom_left, &img_arrow_bottom_left);
     lv_obj_center(img_bottom_left);
-    lv_obj_add_style(img_bottom_left, &image_style, 0);
 
     lv_obj_t *btn_bottom_right = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_bottom_right, event_bottom_right, LV_EVENT_ALL, NULL);
@@ -996,7 +1002,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_bottom_right = lv_img_create(btn_bottom_right);
     lv_img_set_src(img_bottom_right, &img_arrow_bottom_right);
     lv_obj_center(img_bottom_right);
-    lv_obj_add_style(img_bottom_right, &image_style, 0);
 
     lv_obj_t *btn_top_left = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_top_left, event_top_left, LV_EVENT_ALL, NULL);
@@ -1007,7 +1012,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_top_left = lv_img_create(btn_top_left);
     lv_img_set_src(img_top_left, &img_arrow_top_left);
     lv_obj_center(img_top_left);
-    lv_obj_add_style(img_top_left, &image_style, 0);
 
     lv_obj_t *btn_top_right = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_top_right, event_top_right, LV_EVENT_ALL, NULL);
@@ -1018,7 +1022,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *img_top_right = lv_img_create(btn_top_right);
     lv_img_set_src(img_top_right, &img_arrow_top_right);
     lv_obj_center(img_top_right);
-    lv_obj_add_style(img_top_right, &image_style, 0);
 
     lv_obj_t *btn_home = lv_btn_create(panelJog);
     lv_obj_add_event_cb(btn_home, event_home, LV_EVENT_ALL, NULL);
@@ -1029,7 +1032,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *image_home = lv_img_create(btn_home);
     lv_img_set_src(image_home, &img_home);
     lv_obj_center(image_home);
-    lv_obj_add_style(image_home, &image_style, 0);
 
     lv_obj_set_height(panelJog, LV_SIZE_CONTENT);
     lv_obj_set_width(panelJog, LV_SIZE_CONTENT);
@@ -1049,25 +1051,26 @@ void CreateJoystick(lv_obj_t *parent)
     lv_slider_set_range(speed_slider, 10, 2000);
     lv_slider_set_value(speed_slider, speed, LV_ANIM_OFF);
     lv_obj_add_event_cb(speed_slider, speed_event, LV_EVENT_ALL, NULL);
+    lv_obj_add_flag(speed_slider, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
     lv_obj_refresh_ext_draw_size(speed_slider);
     lv_obj_align(speed_slider, LV_ALIGN_TOP_LEFT, 0, 35);
 
     lv_obj_t *distance_label = lv_label_create(panelParams);
     lv_label_set_text(distance_label, strDistance);
     lv_obj_add_style(distance_label, &style_text_muted, 0);
-    lv_obj_align(distance_label, LV_ALIGN_TOP_LEFT, 240, 0);
-
+    lv_obj_align(distance_label, LV_ALIGN_TOP_LEFT, 230, 0);
+    
     uint32_t i;
     char buf[32];
 
     lv_obj_t *cont1 = lv_obj_create(panelParams);
     lv_obj_set_flex_flow(cont1, LV_FLEX_FLOW_COLUMN);
     lv_obj_add_event_cb(cont1, radio_event_handler, LV_EVENT_CLICKED, &active_index);
-    lv_obj_align(cont1, LV_ALIGN_TOP_LEFT, 240, 35);
+    lv_obj_align(cont1, LV_ALIGN_TOP_LEFT, 230, 35);
 
     lv_obj_set_height(cont1, LV_SIZE_CONTENT);
     lv_obj_set_width(cont1, LV_SIZE_CONTENT);
-
+    
     float f = 0.1;
     for (i = 0; i < 4; i++)
     {
@@ -1079,10 +1082,10 @@ void CreateJoystick(lv_obj_t *parent)
         f *= 10;
     }
     lv_obj_add_state(lv_obj_get_child(cont1, active_index), LV_STATE_CHECKED);
-
+    
     lv_obj_set_height(panelParams, LV_SIZE_CONTENT);
     lv_obj_set_width(panelParams, LV_SIZE_CONTENT);
-
+    
     // Tools
     //
     lv_obj_t *panelTools = lv_obj_create(parent);
@@ -1097,7 +1100,6 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *image_unlock = lv_img_create(btn_unlock);
     lv_img_set_src(image_unlock, &img_unlock);
     lv_obj_center(image_unlock);
-    lv_obj_add_style(image_unlock, &image_style, 0);
 
     lv_obj_t *btn_marker = lv_btn_create(panelTools);
     lv_obj_add_event_cb(btn_marker, event_marker, LV_EVENT_ALL, NULL);
@@ -1108,10 +1110,10 @@ void CreateJoystick(lv_obj_t *parent)
     lv_obj_t *image_marker = lv_img_create(btn_marker);
     lv_img_set_src(image_marker, &img_marker);
     lv_obj_center(image_marker);
-    lv_obj_add_style(image_marker, &image_style, 0);
 
     lv_obj_set_height(panelTools, LV_SIZE_CONTENT);
     lv_obj_set_width(panelTools, LV_SIZE_CONTENT);
+    
 }
 
 static void event_folder(lv_event_t *e);
@@ -1146,17 +1148,19 @@ static void populate_list(const char *path)
         isDir = (entry->d_type == DT_DIR ? true : false);
         if (strcmp(entry->d_name, "System Volume Information"))
         {
-            lv_obj_t *list_btn = lv_list_add_btn(main_list, (isDir ? &img_folder : &img_file), entry->d_name);
+            
+             lv_obj_t *list_btn = lv_list_add_button(main_list, (isDir ? &img_folder : &img_file), entry->d_name);
 
-            if (isDir)
-            {
-                lv_obj_add_event_cb(list_btn, event_folder, LV_EVENT_ALL, NULL);
-            }
-            else
-            {
-                lv_obj_add_event_cb(list_btn, event_file, LV_EVENT_ALL, NULL);
-            }
-            lv_obj_set_style_text_font(list_btn, &my_lv_font_montserrat_18, 0);
+             if (isDir)
+             {
+                 lv_obj_add_event_cb(list_btn, event_folder, LV_EVENT_ALL, NULL);
+             }
+             else
+             {
+                 lv_obj_add_event_cb(list_btn, event_file, LV_EVENT_ALL, NULL);
+             }
+             lv_obj_set_style_text_font(list_btn, &my_lv_font_montserrat_18, 0);
+             
         }
     }
     closedir(dir);
@@ -1181,97 +1185,100 @@ static void event_folder(lv_event_t *e)
     }
 }
 
-static void event_file_msgbox(lv_event_t *e)
+static void eventEngrave(lv_event_t *e)
 {
-    lv_obj_t *obj = lv_event_get_current_target(e);
+    scnSendFile = 1;
+    lv_msgbox_close(msg_box);
+}
 
-    if (!strcmp(lv_msgbox_get_active_btn_text(obj), strEngrave))
+static void eventMeasure(lv_event_t *e)
+{
+    if ((strlen(folderName) + strlen(fileName)) >= MAX_FILE_SIZE)
     {
-        scnSendFile = 1;
+        lv_msgbox_close(msg_box);
+        errorMessage(strFilenameTooLong);
+        return;
     }
-    else if (!strcmp(lv_msgbox_get_active_btn_text(obj), strMeasure))
+
+    if (sdCardPresent() == false)
     {
-        if ((strlen(folderName) + strlen(fileName)) >= MAX_FILE_SIZE)
+        lv_msgbox_close(msg_box);
+        errorMessage(strNoSDReader);
+        return;
+    }
+    else
+    {
+        if (!sdCardMount())
         {
             lv_msgbox_close(msg_box);
-            errorMessage(strFilenameTooLong);
+            errorMessage(strNoSDCard);
             return;
         }
+    }
 
-        if (sdCardPresent() == false)
-        {
-            lv_msgbox_close(msg_box);
-            errorMessage(strNoSDReader);
-            return;
-        }
-        else
-        {
-            if (!sdCardMount())
-            {
-                lv_msgbox_close(msg_box);
-                errorMessage(strNoSDCard);
-                return;
-            }
-        }
+    char path[MAX_FILE_SIZE];
+    strcpy(path, folderName);
+    strcat(path, fileName);
 
-        char path[MAX_FILE_SIZE];
-        strcpy(path, folderName);
-        strcat(path, fileName);
-
-        FILE *f = fopen(path, "r");
-        if (f == NULL)
-        {
-            sdCardUnmount();
-            lv_msgbox_close(msg_box);
-            errorMessage(strFileReadError);
-            return;
-        }
-
-        surfaceX = 0;
-        surfaceY = 0;
-        surfaceZ = 0;
-        char line[128];
-        while (fgets(line, sizeof(line), f) != NULL)
-        {
-            char *car = line;
-            while (*car != 0)
-            {
-                if (*car == 'X')
-                {
-                    car++;
-                    float x = atof(car);
-                    if (x > surfaceX)
-                        surfaceX = x;
-                }
-                else if (*car == 'Y')
-                {
-                    car++;
-                    float y = atof(car);
-                    if (y > surfaceY)
-                        surfaceY = y;
-                }
-                else if (*car == 'Z')
-                {
-                    car++;
-                    float z = atof(car);
-                    if (z > surfaceZ)
-                        surfaceZ = z;
-                }
-                car++;
-            }
-        }
-        fclose(f);
-
+    FILE *f = fopen(path, "r");
+    if (f == NULL)
+    {
         sdCardUnmount();
-
-        char str[32];
-        sprintf(str, "X : %.1f", surfaceX);
-        lv_label_set_text(labelSurfaceX, str);
-        sprintf(str, "Y : %.1f", surfaceY);
-        lv_label_set_text(labelSurfaceY, str);
-        sprintf(str, "Z : %.1f", surfaceZ);
-        lv_label_set_text(labelSurfaceZ, str);
+        lv_msgbox_close(msg_box);
+        errorMessage(strFileReadError);
+        return;
     }
+
+    surfaceX = 0;
+    surfaceY = 0;
+    surfaceZ = 0;
+    char line[128];
+    while (fgets(line, sizeof(line), f) != NULL)
+    {
+        char *car = line;
+        while (*car != 0)
+        {
+            if (*car == 'X')
+            {
+                car++;
+                float x = atof(car);
+                if (x > surfaceX)
+                    surfaceX = x;
+            }
+            else if (*car == 'Y')
+            {
+                car++;
+                float y = atof(car);
+                if (y > surfaceY)
+                    surfaceY = y;
+            }
+            else if (*car == 'Z')
+            {
+                car++;
+                float z = atof(car);
+                if (z > surfaceZ)
+                    surfaceZ = z;
+            }
+            car++;
+        }
+    }
+    fclose(f);
+
+    sdCardUnmount();
+
+    char str[32];
+    sprintf(str, "X : %.1f", surfaceX);
+    lv_label_set_text(labelSurfaceX, str);
+    sprintf(str, "Y : %.1f", surfaceY);
+    lv_label_set_text(labelSurfaceY, str);
+    sprintf(str, "Z : %.1f", surfaceZ);
+    lv_label_set_text(labelSurfaceZ, str);
+
+    lv_msgbox_close(msg_box);
+}
+
+static void eventCancel(lv_event_t *e)
+{
     lv_msgbox_close(msg_box);
 }
 
@@ -1284,13 +1291,22 @@ static void event_file(lv_event_t *e)
     {
         char *texte = lv_list_get_btn_text(main_list, obj);
         strcpy(fileName, texte);
-        static const char *btns[] = {strEngrave, strMeasure, strCancel, ""};
 
-        msg_box = lv_msgbox_create(NULL, "Utilisation ?", texte, btns, false);
+        msg_box = lv_msgbox_create(NULL);
+        lv_msgbox_add_title(msg_box, "Utilisation ?");
+        lv_msgbox_add_text(msg_box, texte);
+
         lv_obj_set_style_text_font(msg_box, &my_lv_font_montserrat_18, 0);
-        lv_obj_add_event_cb(msg_box, event_file_msgbox, LV_EVENT_VALUE_CHANGED, NULL);
         lv_obj_center(msg_box);
-        lv_obj_set_size(msg_box, 300, 170);
+        lv_obj_set_size(msg_box, 380, 170);
+
+        lv_obj_t *btn;
+        btn = lv_msgbox_add_footer_button(msg_box, strEngrave);
+        lv_obj_add_event_cb(btn, eventEngrave, LV_EVENT_CLICKED, NULL);
+        btn = lv_msgbox_add_footer_button(msg_box, strMeasure);
+        lv_obj_add_event_cb(btn, eventMeasure, LV_EVENT_CLICKED, NULL);
+        btn = lv_msgbox_add_footer_button(msg_box, strCancel);
+        lv_obj_add_event_cb(btn, eventCancel, LV_EVENT_CLICKED, NULL);
     }
 }
 
@@ -1325,7 +1341,6 @@ void CreateFileExplorer(lv_obj_t *parent)
     lv_obj_t *image_folder_up = lv_img_create(btn_folder_up);
     lv_img_set_src(image_folder_up, &img_folder_up);
     lv_obj_center(image_folder_up);
-    lv_obj_add_style(image_folder_up, &image_style, 0);
 
     lv_obj_t *panel = lv_obj_create(parent);
     lv_obj_align(panel, LV_ALIGN_TOP_LEFT, 80 - 5, 0 - 5);
@@ -1441,13 +1456,14 @@ static void event_execute(lv_event_t *e)
     }
 }
 
-static void event_language(lv_event_t * e)
+static void event_language(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
-    if(code == LV_EVENT_VALUE_CHANGED) {
-        if ( language != lv_dropdown_get_selected(obj))
-           nvsWrite("language", lv_dropdown_get_selected(obj));
+    lv_obj_t *obj = lv_event_get_target(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        if (language != lv_dropdown_get_selected(obj))
+            nvsWrite("language", lv_dropdown_get_selected(obj));
     }
 }
 
@@ -1465,7 +1481,6 @@ void CreateTools(lv_obj_t *parent)
     lv_obj_t *image_focus = lv_img_create(btn_focus);
     lv_img_set_src(image_focus, &img_focus);
     lv_obj_center(image_focus);
-    lv_obj_add_style(image_focus, &image_style, 0);
 
     lv_obj_t *btn_square = lv_btn_create(parent);
     lv_obj_add_event_cb(btn_square, event_square, LV_EVENT_ALL, NULL);
@@ -1476,7 +1491,6 @@ void CreateTools(lv_obj_t *parent)
     lv_obj_t *image_square = lv_img_create(btn_square);
     lv_img_set_src(image_square, &img_square);
     lv_obj_center(image_square);
-    lv_obj_add_style(image_square, &image_style, 0);
 
     lv_obj_t *btn_center = lv_btn_create(parent);
     lv_obj_add_event_cb(btn_center, event_center, LV_EVENT_ALL, NULL);
@@ -1493,23 +1507,20 @@ void CreateTools(lv_obj_t *parent)
     lv_obj_t *image_corner = lv_img_create(btn_corner);
     lv_img_set_src(image_corner, &img_corner);
     lv_obj_center(image_corner);
-    lv_obj_add_style(image_corner, &image_style, 0);
 
     lv_obj_t *image_center = lv_img_create(btn_center);
     lv_img_set_src(image_center, &img_center);
     lv_obj_center(image_center);
-    lv_obj_add_style(image_center, &image_style, 0);
 
     lv_obj_t *btn_execute = lv_btn_create(parent);
     lv_obj_add_event_cb(btn_execute, event_execute, LV_EVENT_ALL, NULL);
     lv_obj_set_height(btn_execute, 64);
     lv_obj_set_width(btn_execute, 64);
-    lv_obj_align(btn_execute, LV_ALIGN_TOP_LEFT, 0 - 5, 64 + 8 + 64 + 8- 5);
+    lv_obj_align(btn_execute, LV_ALIGN_TOP_LEFT, 0 - 5, 64 + 8 + 64 + 8 - 5);
 
     lv_obj_t *image_execute = lv_img_create(btn_execute);
     lv_img_set_src(image_execute, &img_execute);
     lv_obj_center(image_execute);
-    lv_obj_add_style(image_execute, &image_style, 0);
 
     labelFileTools = lv_label_create(parent);
     lv_obj_align(labelFileTools, LV_ALIGN_TOP_LEFT, 170 - 5, 0 - 5);
@@ -1541,17 +1552,15 @@ void CreateTools(lv_obj_t *parent)
     lv_obj_set_height(panelMax, LV_SIZE_CONTENT);
     lv_obj_set_width(panelMax, LV_SIZE_CONTENT);
 
-    lv_obj_t * dd = lv_dropdown_create(parent);
-    
+    lv_obj_t *dd = lv_dropdown_create(parent);
+    lv_obj_set_style_text_font(dd, &my_lv_font_montserrat_18, 0);
+
     lv_dropdown_set_options(dd, "Français\n"
                                 "English");
     lv_dropdown_set_selected(dd, language);
-    lv_dropdown_set_symbol(dd, &img_caret_down);
-    lv_obj_set_style_transform_angle(dd, 1800, LV_PART_INDICATOR | LV_STATE_CHECKED);
 
     lv_obj_align(dd, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_add_event_cb(dd, event_language, LV_EVENT_ALL, NULL);
-
 }
 
 void CreatePanels()
@@ -1563,17 +1572,17 @@ void CreatePanels()
     lv_style_init(&style_text_muted);
     lv_style_set_text_opa(&style_text_muted, LV_OPA_70);
 
-    lv_style_init(&image_style);
-    lv_style_set_img_recolor_opa(&image_style, LV_OPA_COVER);
-    lv_style_set_img_recolor(&image_style, lv_palette_lighten(LV_PALETTE_GREY, 4));
-
     lv_style_init(&style_radio);
     lv_style_set_radius(&style_radio, LV_RADIUS_CIRCLE);
 
     lv_style_init(&style_radio_chk);
     lv_style_set_bg_img_src(&style_radio_chk, NULL);
 
-    tv = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 60);
+    tv = lv_tabview_create(lv_scr_act());
+    lv_obj_set_style_text_font(tv, &my_lv_font_montserrat_18, 0);
+
+    lv_tabview_set_tab_bar_position(tv, LV_DIR_TOP);
+    lv_tabview_set_tab_bar_size(tv, 60);
 
     lv_obj_t *tabJoystick = lv_tabview_add_tab(tv, strJoystick);
     lv_obj_t *tabFileExplorer = lv_tabview_add_tab(tv, strFiles);
@@ -1621,6 +1630,14 @@ void CreatePanels()
 
     color_changer_create(tv);
 
+        lv_palette_t palette_secondary = current_palette + 3;
+        if (palette_secondary >= LV_PALETTE_LAST)
+            palette_secondary = 0;
+#if LV_USE_THEME_DEFAULT
+        lv_theme_default_init(NULL, lv_palette_main(current_palette), lv_palette_main(palette_secondary),
+                              LV_THEME_DEFAULT_DARK, &my_lv_font_montserrat_18);
+#endif
+
     lv_timer_create(updateVals, 300, NULL);
 
     xTaskCreate(read_usb, "ReadUsb", 4096, NULL, 4, NULL);
@@ -1634,12 +1651,22 @@ void app_main()
 
     language = nvsRead("language");
     languageInit(language);
+    current_palette = nvsRead("palette");
+    active_index = nvsRead("active_index");
+    distance = 0.1;
+    for (int i = 0; i < active_index; i++)
+    {
+        distance *= 10;
+    }
+    speed = nvsRead("speed");
+    if ( speed < 10 || speed > 2000)
+        speed = 500;
 
     if (hardLvglLock(-1))
     {
         CreatePanels();
         hardLvglUnlock();
     }
-    
+
     usbLoop();
 }

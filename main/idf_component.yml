@@ -1,10 +1,10 @@
 dependencies:
   lvgl/lvgl:
-    version: "==8.4.0"
+    version: ">=9.4.0"
   usb_host_ch34x_vcp: "^2"
   usb_host_cp210x_vcp: "^2"
   usb_host_ftdi_vcp: "^2"
   usb_host_vcp: "^1"
   
   idf:
-    version: ">=5.1.0"
+    version: ">=5.5.1"

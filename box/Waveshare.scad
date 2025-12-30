@@ -236,7 +236,7 @@ module topWaveshare()
 		}
 	}
 }
-//translate([largeurCircuit+epaisseurParoi*2, 0,hauteurBoite*2-hauteurConnexion])
-//    rotate([180,0,180])
+translate([largeurCircuit+epaisseurParoi*2, 0,hauteurBoite*2-hauteurConnexion])
+    rotate([180,0,180])
         topWaveshare();
-//bottomWaveshare();
+bottomWaveshare();
