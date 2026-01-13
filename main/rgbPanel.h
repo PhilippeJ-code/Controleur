@@ -5,7 +5,7 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
 
-#define LCD_PIXEL_CLOCK_HZ          (14 * 1000 * 1000)
+#define LCD_PIXEL_CLOCK_HZ          (16 * 1000 * 1000)
 #define LCD_BK_LIGHT_ON_LEVEL       1
 #define LCD_BK_LIGHT_OFF_LEVEL      !LCD_BK_LIGHT_ON_LEVEL
 #define LCD_PIN_NUM_BK_LIGHT        -1
